@@ -69,6 +69,10 @@
       (setf *zimuzu-catalog* (read input))))
   *zimuzu-catalog*)
 
+(defun subtitle-page-uri (index)
+  (format nil "~aesubtitle?page=~a"
+	  *zimuzu-root* index))
+
 (defun build-catalog (&optional (workspace *workspace*))
   (setf *zimuzu-catalog* nil)
   
@@ -94,4 +98,27 @@
                           :direction :output
                           :if-exists :supersede)
     (write *zimuzu-catalog* :stream output))
-  (format t "Saved to ~a.~%" (catalog-path)))
+  (format t "Saved to ~a.~%" (zimuzu-catalog-path)))
+
+
+;;; ---------- Download file and Parse ----------
+
+(def-path zimuzu-url-to-file (url &optional (workspace *workspace*))
+  (merge-pathnames (format nil "~a.~a" (pathname-name url) (pathname-type url))
+		   workspace))
+
+(defun download-file (url &optional (workspace *workspace*))
+  (let ((source-stream (drakma:http-request url :want-stream t)))
+    (with-open-file (output (zimuzu-url-to-file-path url)
+			    :direction :output
+			    :if-exists :supersede
+			    :element-type '(unsigned-byte 8))
+      (unwind-protect 
+	   (loop for byte = (read-byte source-stream nil nil)
+	      while byte
+	      do (write-byte byte output))
+	(close source-stream)))))
+
+      
+			     
+	  

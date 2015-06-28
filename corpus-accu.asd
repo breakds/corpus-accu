@@ -6,8 +6,11 @@
                  #:basicl
                  #:sqlite
                  #:split-sequence
-                 #:stefil)
+		 #:yacc
+		 #:cl-lex
+                 #:cl-ppcre)
     :components ((:file "package")
                  (:file "utils")
+		 (:file "subtitle-parser/ass")
                  (:file "subhd/accu")
                  (:file "zimuzu/accu")))

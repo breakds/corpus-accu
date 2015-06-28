@@ -5,8 +5,6 @@
 
 (defvar *subhd-max-new-pages* 50)
 
-(defvar *workspace* "/home/breakds/tmp/subhd/")
-
 (defvar *subhd-uploaders* nil)
 
 ;;; ---------- uploaders ----------
