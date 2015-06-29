@@ -40,37 +40,31 @@
       (let ((lexer (ass-lexer seq)))
 	lexer))))
 
-(defun is-chinese-character (character)
-  (and (char>= character #\u4e00)
-       (char<= character #\u9fa5)))
-
-(defun split-into-chinese-pieces (text)
-  (remove-if #`,(= (length x1) 0)
-	     (split-sequence:split-sequence-if-not #'is-chinese-character
-						   text)))
-
-
-(defun extract-chinese-corpus-from-ass (input-path output-path)
+(defun extract-chinese-corpus-from-ass (input-path output-path
+                                        &optional (log-stream t))
   "Return the number of extracted chinese text pieces."
   (let (extracted)
     (with-open-file (input input-path
 			   :direction :input)
-      (loop for line = (read-line input nil nil)
-	 while line
-	 do (multiple-value-bind (matched subtitle-body)
-		(ppcre:scan-to-strings *ass-subtitle-body* line)
-	      (when matched
-		(handler-case 
-		    (let* ((lexer (ass-lexer (aref subtitle-body 0)))
-			   (parsed (parse-with-lexer lexer ass-parser)))
-		      (loop for item in parsed
-			 when (stringp item)
-			 do (loop for piece in (split-into-chinese-pieces item)
-			       do (push piece extracted))))
-		  (t () (format t "[WARNING] Error while parsing ~a~%"
-				(aref subtitle-body 0)) nil))))))
+      (handler-case
+          (loop for line = (read-line input nil nil)
+             while line
+             do (multiple-value-bind (matched subtitle-body)
+                    (ppcre:scan-to-strings *ass-subtitle-body* line)
+                  (when matched
+                    (handler-case 
+                        (let* ((lexer (ass-lexer (aref subtitle-body 0)))
+                               (parsed (parse-with-lexer lexer ass-parser)))
+                          (loop for item in parsed
+                             when (stringp item)
+                             do (loop for piece in (split-into-chinese-pieces item)
+                                   do (push piece extracted))))
+                      (t () (format log-stream "[WARNING] Error while parsing ~a: ~a~%"
+                                    input-path (aref subtitle-body 0)) nil)))))
+        (t () (format log-stream "[ERROR] Corrupted file ~a.~%"
+                      input-path) nil)))
     (with-open-file (output output-path
 			    :direction :output
 			    :if-exists :supersede)
-      (format output "~{~a~^ ~}" extracted))
+      (format output "~{~a~^ ~}" (reverse extracted)))
     (length extracted)))

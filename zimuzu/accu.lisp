@@ -103,13 +103,13 @@
 
 ;;; ---------- Download file and Parse ----------
 
-(def-path zimuzu-url-to-file (url &optional (workspace *workspace*))
+(def-path zimuzu-url-to-file (url &optional (parent *workspace*))
   (merge-pathnames (format nil "~a.~a" (pathname-name url) (pathname-type url))
-		   workspace))
+		   parent))
 
 (defun download-file (url &optional (workspace *workspace*))
   (let ((source-stream (drakma:http-request url :want-stream t)))
-    (with-open-file (output (zimuzu-url-to-file-path url)
+    (with-open-file (output (zimuzu-url-to-file-path url workspace)
 			    :direction :output
 			    :if-exists :supersede
 			    :element-type '(unsigned-byte 8))
@@ -119,6 +119,58 @@
 	      do (write-byte byte output))
 	(close source-stream)))))
 
+(defun get-signature (url)
+  (let ((md5-sequence (md5:md5sum-string url)))
+    (format nil "~{~x~}"
+            (loop for integer across md5-sequence
+               append (list (ash integer -4) (logand integer 15))))))
+
+(defun process-catalog-item (item &optional (log-stream t))
+  (let* ((sig (get-signature (getf item :url)))
+         (compression-type (pathname-type (getf item :url)))
+         (workspace (merge-pathnames (format nil "~a/" sig) 
+                                     *workspace*))
+         (package-path (zimuzu-url-to-file-path (getf item :url)
+                                                workspace)))
+    (format t "Start processing ~a: ~a.~%"
+            sig (getf item :name))
+    ;; Download the package
+    (handler-case
+        (download-file (getf item :url) workspace)
+      (t () 
+        (format log-stream "[ERROR] ~a: failed to download ~a.~%"
+                sig (getf item :url))
+        (return-from process-catalog-item nil)))
+
+    ;; Decompression
+    (cond ((string-equal compression-type "rar")
+           (sb-ext:run-program "/usr/bin/unrar" 
+                               (list "x"  ;; extraction
+                                     (format nil "~a" package-path)
+                                     (format nil "~a" workspace))
+                               :wait t))
+          (t (format log-stream "[WARNING] ~a: no compression detected.~%"
+                     sig)))
+    ;; Detect usable files
+    (fad:walk-directory workspace
+                        (lambda (file-name)
+                          (format t "~a~%" file-name))
+                        :test #`,(member (pathname-type x1)
+                                         '("srt" "ass" "ssa")
+                                         :test #'string-equal))))
+    
+    
+
+
+                                                                  
+    
+         
+         
+         
+
+    
+         
+    
       
 			     
 	  
