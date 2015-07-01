@@ -1,6 +1,8 @@
 (defpackage #:breakds.subtitle-parser
   (:nicknames #:subtitle-parser)
-  (:use #:cl #:yacc #:cl-lex))
+  (:use #:cl #:yacc #:cl-lex)
+  (:export #:extract-chinese-corpus-from-srt
+           #:extract-chinese-corpus-from-ass))
 
 (defpackage #:breakds.corpus-accu
   (:nicknames #:corpus-accu)
@@ -11,7 +13,8 @@
 	   #:*zimuzu-catalog*
 	   #:*zimuzu-root*
 	   #:*zimuz-sleep-interval*
-	   #:build-catalog))
+	   #:build-catalog
+           #:pathname-ty))
 
 
 	      
