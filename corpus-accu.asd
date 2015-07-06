@@ -11,10 +11,10 @@
 		 #:yacc
 		 #:cl-lex
                  #:cl-ppcre)
-    :components ((:file "package")
-                 (:file "utils")
-		 (:file "subtitle-parser/aux")
-		 (:file "subtitle-parser/ass")
-		 (:file "subtitle-parser/srt")
-                 (:file "subhd/accu")
-                 (:file "zimuzu/accu")))
+    :components ((:file "crawler/package")
+                 (:file "crawler/utils")
+		 (:file "crawler/subtitle-parser/aux")
+		 (:file "crawler/subtitle-parser/ass")
+		 (:file "crawler/subtitle-parser/srt")
+                 (:file "crawler/subhd/accu")
+                 (:file "crawler/zimuzu/accu")))
