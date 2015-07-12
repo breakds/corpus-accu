@@ -17,4 +17,5 @@
 		 (:file "crawler/subtitle-parser/ass")
 		 (:file "crawler/subtitle-parser/srt")
                  (:file "crawler/subhd/accu")
-                 (:file "crawler/zimuzu/accu")))
+                 (:file "crawler/zimuzu/accu")
+                 (:file "crawler/bilibili/accu")))
