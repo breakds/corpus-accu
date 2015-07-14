@@ -1,7 +1,7 @@
 ;;;; Aux.lisp
 ;;;; Auxiliary subroutines for subtitle parsers.
 
-(in-package #:breakds.subtitle-parser)
+(in-package #:breakds.corpus-accu.aux)
 
 (defun is-chinese-character (character)
   (and (char>= character #\u4e00)

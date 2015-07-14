@@ -70,11 +70,50 @@
   (merge-pathnames (format nil "catalog/~a.lisp" category-name)
                    workspace))
 
+(def-path bili-comment-buffer (cid &optional (workspace *bili-workspace*))
+  (merge-pathnames (format nil "buffer/~a.xml" cid)
+                   workspace))
+
+(def-path bili-raw (&optional (workspace *bili-workspace*))
+  (merge-pathnames "input/raw.txt" workspace))
+
+(declaim (inline bili-comment-url))
+(defun bili-comment-url (cid)
+  (format nil "~a~a.xml" *bili-comment-root* cid))
+
+(defun curl-bili-comment-xml (cid)
+  (let* ((buffer-path (bili-comment-buffer-path cid)))
+    (sb-ext:run-program "/usr/bin/curl"
+                        (list "--compressed" (bili-comment-url cid)
+                              "-o" (format nil "~a" buffer-path)))
+    (let ((xml (html-from-file buffer-path)))
+      (sb-ext:run-program "/bin/rm" (list "-f" (format nil "~a" buffer-path)))
+      xml)))
+
+(def-list-wrapper crawl-bili-comment
+    "body i d"
+  (lambda (node) (get-content node)))
 
 ;; ---------- Operational Functions ----------
 
 (defun clear-bili-catalog ()
   (clrhash *bili-catalog*))
+
+(defun reload-bili-catalog (category-specs)
+  (clear-bili-catalog)
+  (loop for spec in category-specs
+     do (with-open-file (input (bili-catalog-path (car spec))
+                               :direction :input
+                               :if-does-not-exist :error)
+          (loop 
+             for entry = (read input nil nil)
+             for fixed-entry = (if (listp (third entry))
+                                   (list* (first entry) (second entry)
+                                          (third entry))
+                                   entry)
+             while entry
+             do (setf (gethash (getf fixed-entry :cid) *bili-catalog*)
+                      fixed-entry)))))
 
 (defun crawl-bili-category (category-name category-index 
                             &key (start-page 1))
@@ -97,8 +136,8 @@
                 for entry in collected
                 for cid = (getf entry :cid)
                 unless (gethash cid *bili-catalog* nil)
-                do (let ((complete-entry (list :category category-name
-                                               entry)))
+                do (let ((complete-entry (list* :category category-name
+                                                entry)))
                      (setf (gethash cid *bili-catalog*)
                            complete-entry)
                      (fresh-line output)
@@ -120,6 +159,56 @@
                                                 1))
          (t () (format t "[ERROR] Failed to process category ~a~%" 
                        (first spec))))))
+
+
+(defun crawl-bili-raw-comments (&key (start 0) (log t))
+  (with-open-file (output (bili-raw-path)
+                          :direction :output
+                          :if-does-not-exist :create
+                          :if-exists :append)
+    (let ((seen-comments 0)
+          (kept-comments 0))
+      (loop 
+         for cid being the hash-keys of *bili-catalog*
+         for entry being the hash-values of *bili-catalog*
+         for i from 0
+         when (and (>= i start) cid (> (getf entry :comments 0)))
+         do (handler-case
+                (let ((comments (crawl-bili-comment (curl-bili-comment-xml cid)))
+                      (crawled-comments 0))
+                  (when (> (length comments) 0)
+                    (loop 
+                       for comment in comments
+                       for pieces = (split-into-chinese-pieces comment)
+                       ;; total length threshold
+                       when (> (apply #'+ (mapcar #'length pieces)) 5)
+                       do (progn (fresh-line output)
+                                 (format output "~{~a~^ ~}~%" pieces)
+                                 (incf crawled-comments)))
+                    (incf seen-comments (length comments))
+                    (incf kept-comments crawled-comments)
+                    (format log "~5a: [~a] ~a: ~d/~d (~2$%) ---- ~d/~d (~2$%)~%" i
+                            (getf entry :category) (getf entry :name)
+                            crawled-comments (getf entry :comments)
+                            (float (/ (* crawled-comments 100) (getf entry :comments)))
+                            kept-comments seen-comments
+                            (float (/ (* kept-comments 100) seen-comments)))
+                    (format t ".")
+                    (finish-output log)
+                    (finish-output output)))
+              (t () nil))))))
+                    
+                    
+                
+
+                   
+               
+                                
+       
+
+
+
+  
        
          
        
