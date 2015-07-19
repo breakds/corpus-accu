@@ -4,7 +4,7 @@ require 'os'
 
 ---------- Command Line Options ----------
 local cmd = torch.CmdLine()
-cmd:option('-sentence_size', 12, 'Max allowed length of sentences.')
+cmd:option('-sentence_size', 20, 'Max allowed length of sentences.')
 
 
 -- Dictionary
@@ -25,8 +25,10 @@ cmd:option('-load_training_set', '',
 
 -- Model
 cmd:option('-save_model', '', 'Specify path to store the trained model.')
-           
-
+cmd:option('-learning_rate', 0.001, 'The learning rate.')
+cmd:option('-max_iteration', 50, 'The max per batch iteration.')
+cmd:option('-max_epoch', 200, 'The max number of epoches.')
+cmd:option('-batch_size', 5000, 'The number of sentences in a batch.')
 
 local arguments = cmd:parse(arg)
 
@@ -164,10 +166,10 @@ function Training()
    ---------- Part IV: Traning ----------
    model:train(DataSet, training_set, 
                {
-                  learningRate = 0.001,
-                  maxIteration = 20,
-                  maxEpoch = 1,
-                  batchSize = 10
+                  learningRate = arguments.learning_rate,
+                  maxIteration = arguments.max_iteration,
+                  maxEpoch = arguments.max_epoch,
+                  batchSize = arguments.batch_size
                })
 
    ---------- Part V: Save Model ----------

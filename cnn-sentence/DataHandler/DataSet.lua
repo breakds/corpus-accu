@@ -42,7 +42,6 @@ function DataSet.Load(path, options)
       while text do
          sentence_count = sentence_count + 1
          
-         
          local words = string.split(text, ' ')
          if #words > sentence_size then
             -- Print warning when the number of words in this

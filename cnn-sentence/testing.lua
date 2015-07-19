@@ -8,7 +8,7 @@ cmd:option('-dictionary', '/home/breakds/tmp/bilibili/input/word_vecs.bin',
            'path to the word2vec binary dictionary.')
 cmd:option('-model', '', 'Specifies the folder where trained model resides.')
 cmd:option('-input', '', 'Path to the input file')
-cmd:option('-sentence_size', 12, 'Max allowed length of sentences.')
+cmd:option('-sentence_size', 20, 'Max allowed length of sentences.')
 
 local arguments = cmd:parse(arg)
 
@@ -50,7 +50,7 @@ function Testing()
 
       local result = torch.exp(model.network:forward(input_vector))
       result = result / (result[1] + result[2])
-      text = input_file:readString('*l')
+      local text = input_file:readString('*l')
       print(string.format('%.4f - %s', result[1], text))
    end
    
