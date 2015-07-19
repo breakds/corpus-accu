@@ -41,14 +41,17 @@ function DataSet.Load(path, options)
       
       while text do
          sentence_count = sentence_count + 1
+         if 0 == sentence_size % 100 then
+            collectgarbage()
+         end
          
          local words = string.split(text, ' ')
          if #words > sentence_size then
             -- Print warning when the number of words in this
             -- sentence is greater than sentence length, since we
             -- are going to truncate it.
-            print(string.format('[WARNING] Sentence length %d > %d, truncated.',
-                                #words, sentence_size))
+            -- print(string.format('[WARNING] Sentence length %d > %d, truncated.',
+            -- #words, sentence_size))
          end
 
          -- Build up word indices. Apply zero-padding when the
