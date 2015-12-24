@@ -25,8 +25,10 @@ cmd:option('-load_training_set', '',
 
 -- Model
 cmd:option('-save_model', '', 'Specify path to store the trained model.')
+cmd:option('-load_model', '', 
+           'When specified, load the model instead of construct it.')
 cmd:option('-learning_rate', 0.001, 'The learning rate.')
-cmd:option('-max_iteration', 50, 'The max per batch iteration.')
+cmd:option('-max_iteration', 20, 'The max per batch iteration.')
 cmd:option('-max_epoch', 200, 'The max number of epoches.')
 cmd:option('-batch_size', 5000, 'The number of sentences in a batch.')
 
@@ -154,11 +156,20 @@ function Training()
    
    ---------- Part III: Construct Neural Network ----------
    local SimpleCNN = require 'Model.SimpleCNN'
-   local model = SimpleCNN {
-      input_frame_size = dictionary.dimension,
-      sentence_size = training_set.input:size()[2],
-      kernel_size = 5}
-   print('[ ok ] Neural Network Constructed.')
+   local model = {}
+   if '' == arguments.load_model then
+      model = SimpleCNN {
+         input_frame_size = dictionary.dimension,
+         sentence_size = training_set.input:size()[2],
+         num_convolutions = 100,
+         kernel_size = 5}
+      print('[ ok ] Neural Network Constructed.')
+   else
+      model = SimpleCNN {
+         load_path = arguments.load_model
+      }
+      print('[ ok ] Neural Network Loaded.')
+   end
    print('[info] Neural Network Summary:')
    print(model.network)
 

@@ -49,6 +49,7 @@ function Testing()
       end
 
       local result = torch.exp(model.network:forward(input_vector))
+      print(result)
       result = result / (result[1] + result[2])
       local text = input_file:readString('*l')
       print(string.format('%.4f - %s', result[1], text))

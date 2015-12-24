@@ -61,6 +61,7 @@ function DataSet.Load(path, options)
          for j = 1, sentence_size do
             if j <= #words then
                word_indices[j] = options['dictionary']:IndexOfWord(words[j])
+               if not word_indices[j] then word_indices[j] = 0 end
             else
                word_indices[j] = 0
             end
@@ -78,6 +79,10 @@ function DataSet.Load(path, options)
       local result = torch.Tensor(sentence_count, sentence_size)
    
       for i = 1, sentence_count do
+         if 0 == i % 1000 then
+            xlua.progress(i, sentence_count)
+            collectgarbage()
+         end
          for j = 1, sentence_size do
             result[i][j] = buffer[i][j]
          end
@@ -184,6 +189,8 @@ function DataSet.BatchIterator1(options)
          return nil
       end
       
+      collectgarbage()
+
       local start = (self.current_batch - 1) * options.batch_size + 1
 
       -- It is possible that the last batch is smaller than usual.

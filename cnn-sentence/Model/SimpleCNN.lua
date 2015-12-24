@@ -9,9 +9,9 @@ local SimpleCNN = {}
 function SimpleCNN:train(DataSet, training_set, options)
    local optimizer = nn.StochasticGradient(self.network, self.criterion)
    optimizer.learningRate = options.learningRate or 0.001
-   optimizer.maxIterator = options.maxIteration or 50
+   optimizer.maxIteration = options.maxIteration or 50
    
-   local maxEpoch = options.maxEpoch or 50
+   local maxEpoch = options.maxEpoch or 20
    
    for epoch = 1, maxEpoch do
       local iterator = DataSet.BatchIterator1 {
@@ -21,8 +21,10 @@ function SimpleCNN:train(DataSet, training_set, options)
 
       for i = 1, iterator.num_of_batches do
          local batch = iterator:fetch()
-         print(batch:size())
          optimizer:train(batch)
+         -- print(string.format('[ ok ] Epoch %d, Batch %d/%d done.', 
+         --                     epoch, i, iterator.num_of_batches))
+         xlua.progress(i, iterator.num_of_batches)
          iterator:next()
       end
       print(string.format('[ ok ] Epoch %d/%d done.', 
